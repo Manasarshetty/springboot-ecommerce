@@ -2,6 +2,8 @@ package springboot_ecommerce.project.e_commerce.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import springboot_ecommerce.project.e_commerce.exception.ProductNotFoundException;
+import springboot_ecommerce.project.e_commerce.exception.ProductValidationException;
 import springboot_ecommerce.project.e_commerce.model.Product;
 import springboot_ecommerce.project.e_commerce.repository.ProductRepository;
 
@@ -24,20 +26,31 @@ public class ProductService {
     public Optional<Product> findProductById(Long id){
         return productRepository.findById(id);
     }
-    public Product saveProduct(Long id, Product product){
-        return productRepository.save(product);
+    public Product saveProduct( Product product) throws ProductValidationException {
+        if(product.getName()!=null){
+            return productRepository.save(product);
+        }else{
+            throw new ProductValidationException("Product cannot be null");
+        }
+
     }
-    public Optional<Product> updateProduct(Long id, Product productDetails) {
-        Optional<Product> optionalProduct = productRepository.findById(id);
+    public Product updateProduct(Long id, Product productDetails) throws ProductNotFoundException {
+        try {
+            if(id<=0){
+                throw new ProductNotFoundException(id);
+            }
+        } catch (ProductNotFoundException e) {
+            throw new ProductNotFoundException(id);
+        }Optional<Product> optionalProduct = productRepository.findById(id);
         if (optionalProduct.isPresent()) {
             Product existingProduct = optionalProduct.get();
             existingProduct.setName(productDetails.getName());
             existingProduct.setDescription(productDetails.getDescription());
             existingProduct.setPrice(productDetails.getPrice());
             Product saved = productRepository.save(existingProduct);
-            return Optional.of(saved);
+            return saved;
         } else {
-            return Optional.empty();
+             throw new RuntimeException();
         }
     }
     public String deleteProductById(Long id){
